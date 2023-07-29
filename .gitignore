@@ -1,0 +1,7 @@
+# Django-related files
+db.sqlite3
+*.pyc
+__pycache__/
+
+# .env file
+.env
