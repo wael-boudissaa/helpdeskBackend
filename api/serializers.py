@@ -2,7 +2,7 @@ from rest_framework import serializers
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 from rest_framework_simplejwt.views import TokenObtainPairView
 from django.contrib.auth.models import User
-from .models import Ticket
+from .models import *
 
 class MyTokenObtainPairSerializer(TokenObtainPairSerializer):
     @classmethod
@@ -23,7 +23,13 @@ class UserSerializer(serializers.ModelSerializer):
         model = User
         fields = '__all__'  # or specify the fields you want to include
 
+class ExpertSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Expert
+        fields = '__all__'  # Serialize all fields of the Expert model
+
 class TicketSerializer(serializers.ModelSerializer):
     class Meta:
         model = Ticket
         fields = '__all__'  # or specify the fields you want to include
+

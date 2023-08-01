@@ -20,7 +20,17 @@ class TicketsAPIView(APIView):
             queryset = Ticket.objects.filter(applicantId = user.get("id"))
             response = []
             for ticket in queryset:
-                response.append(TicketSerializer(ticket).data)
+                ticketAlone = TicketSerializer(ticket).data
+                users = User.objects.filter(id = ticketAlone.get("expertId"))
+                experts = Expert.objects.filter(user_id = ticketAlone.get("expertId"))
+                if (len(experts) > 0):
+                 expertName = UserSerializer(users[0]).data.get("username")
+                 expertJob = ExpertSerializer(experts[0]).data.get("domaine_expertise")
+                 ticketAlone.update({"expertName" : expertName, "expertJob":expertJob})
+                 
+                else : 
+                 ticketAlone.update({"expertName" : "Undefined Expert Name, Ticket not Affected Yet"})
+                response.append(ticketAlone)
             return Response(response, status=status.HTTP_200_OK)
         if (IsExpert().has_permission(request, self)):
             user = UserSerializer(request.user).data
@@ -34,7 +44,17 @@ class TicketsAPIView(APIView):
             queryset = Ticket.objects.all()
             response = []
             for ticket in queryset:
-                response.append(TicketSerializer(ticket).data)
+                ticketAlone = TicketSerializer(ticket).data
+                users = User.objects.filter(id = ticketAlone.get("expertId"))
+                experts = Expert.objects.filter(user_id = ticketAlone.get("expertId"))
+                if (len(experts) > 0):
+                 expertName = UserSerializer(users[0]).data.get("username")
+                 expertJob = ExpertSerializer(experts[0]).data.get("domaine_expertise")
+                 ticketAlone.update({"expertName" : expertName, "expertJob":expertJob})
+                 
+                else : 
+                 ticketAlone.update({"expertName" : "Undefined Expert Name, Ticket not Affected Yet"})
+                response.append(ticketAlone)
             return Response(response, status=status.HTTP_200_OK)
             # queryset = Ticket.objects.filter(applicantId = )
         return Response({"msg": "failed"}, status=status.HTTP_400_BAD_REQUEST)
