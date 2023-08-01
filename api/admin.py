@@ -1,6 +1,8 @@
 from django.contrib import admin
-from .models import Admin,Applicant
+from .models import *
 
 # Register your models here.
 admin.site.register(Admin)
 admin.site.register (Applicant)
+admin.site.register(Ticket)
+admin.site.register(Expert)

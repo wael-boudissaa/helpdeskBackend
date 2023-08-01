@@ -9,7 +9,7 @@ def generate_unique_code():
 
     while True:
         code = ''.join(random.choices(string.ascii_uppercase, k=length))
-        if Ticket.objects.filter(announceCode=code).count() == 0:
+        if Ticket.objects.filter(idTicket=code).count() == 0:
             break
 
     return code
@@ -40,7 +40,7 @@ class Ticket (models.Model):
     etat=models.BooleanField(default=False)
     issue = models.CharField(max_length=100, null=False)
     category = models.CharField(max_length=50, null=False)
-    expertId= models.ForeignKey(Expert,on_delete=models.CASCADE, related_name='tickets', null=True)
+    expertId= models.ForeignKey(Expert,on_delete=models.CASCADE, related_name='tickets', null=True, blank=True)
     applicantId= models.ForeignKey(Applicant, on_delete=models.CASCADE, related_name='tickets')
     creationDate=models.DateField(auto_now_add=True)
     def __str__ (self):
