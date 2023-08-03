@@ -33,6 +33,11 @@ class TicketSerializer(serializers.ModelSerializer):
         model = Ticket
         fields = '__all__'  # or specify the fields you want to include
 
+class PostTicketSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Ticket
+        fields = ('priority', 'issue', 'category')
+
 class ApplicantSerializer(serializers.ModelSerializer):
     class Meta:
         model = Applicant

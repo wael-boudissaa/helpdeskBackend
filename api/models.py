@@ -42,7 +42,7 @@ class Ticket (models.Model):
     category = models.CharField(max_length=50, null=False)
     expertId= models.ForeignKey(Expert,on_delete=models.CASCADE, related_name='tickets', null=True, blank=True)
     applicantId= models.ForeignKey(Applicant, on_delete=models.CASCADE, related_name='tickets')
-    creationDate=models.DateField(auto_now_add=True)
+    creationDate=models.DateTimeField(auto_now_add=True)
     def __str__ (self):
         return self.idTicket
     
