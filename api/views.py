@@ -11,6 +11,7 @@ from rest_framework import status
 import json
 from django.core.serializers import serialize
 
+
 class MyTokenObtainPairView(TokenObtainPairView):
     serializer_class = MyTokenObtainPairSerializer
 
@@ -113,12 +114,13 @@ class TicketsAPIView(APIView):
                     priority=serializer.data.get("priority"),
                     issue=serializer.data.get("issue"),
                     category=serializer.data.get("category"),
-                    applicantId=users[0].applicant
+                    applicantId=users[0].applicant,
                 )
                 return Response({"msg": "success"}, status=status.HTTP_200_OK)
             else:
                 return Response(
-                    {"msg": "A required field missing"}, status=status.HTTP_400_BAD_REQUEST
+                    {"msg": "A required field missing"},
+                    status=status.HTTP_400_BAD_REQUEST,
                 )
         else:
             return Response(
