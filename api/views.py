@@ -26,10 +26,10 @@ class TicketsAPIView(APIView):
                 if (len(experts) > 0):
                  expertName = UserSerializer(users[0]).data.get("username")
                  expertJob = ExpertSerializer(experts[0]).data.get("domaine_expertise")
-                 ticketAlone.update({"expertName" : expertName, "expertJob":expertJob})
+                 ticketAlone.update({"username" : expertName, "jobtitle":expertJob})
                  
                 else : 
-                 ticketAlone.update({"expertName" : "Undefined Expert Name, Ticket not Affected Yet"})
+                 ticketAlone.update({"username" : "Ticket not Affected Yet"})
                 response.append(ticketAlone)
             return Response(response, status=status.HTTP_200_OK)
         if (IsExpert().has_permission(request, self)):
@@ -37,7 +37,13 @@ class TicketsAPIView(APIView):
             queryset = Ticket.objects.filter(expertId = user.get("id"))
             response = []
             for ticket in queryset:
-                response.append(TicketSerializer(ticket).data)
+                ticketAlone = TicketSerializer(ticket).data
+                users =User.objects.filter(id=ticketAlone.get("applicantId"))
+                applicants =Applicant.objects.filter(user_id = ticketAlone.get("applicantId"))
+                username =UserSerializer(users[0]).data.get("username")
+                jobtitle=ApplicantSerializer(applicants[0]).data.get("job_title")
+                ticketAlone.update({"username":username,"jobtitle":jobtitle})
+                response.append(ticketAlone)
             return Response(response, status=status.HTTP_200_OK)
         if (IsAdmin().has_permission(request, self)):
             user = UserSerializer(request.user).data
@@ -45,20 +51,21 @@ class TicketsAPIView(APIView):
             response = []
             for ticket in queryset:
                 ticketAlone = TicketSerializer(ticket).data
-                users = User.objects.filter(id = ticketAlone.get("expertId"))
+                expertUsers = User.objects.filter(id = ticketAlone.get("expertId"))
                 experts = Expert.objects.filter(user_id = ticketAlone.get("expertId"))
+                users =User.objects.filter(id=ticketAlone.get("applicantId"))
+                applicants =Applicant.objects.filter(user_id = ticketAlone.get("applicantId"))
+                username =UserSerializer(users[0]).data.get("username")
+                jobtitle=ApplicantSerializer(applicants[0]).data.get("job_title")
                 if (len(experts) > 0):
-                 expertName = UserSerializer(users[0]).data.get("username")
+                 expertName = UserSerializer(expertUsers[0]).data.get("username")
                  expertJob = ExpertSerializer(experts[0]).data.get("domaine_expertise")
-                 ticketAlone.update({"expertName" : expertName, "expertJob":expertJob})
-                 
+                 ticketAlone.update({"username": username, "jobtitle": jobtitle, "expertname": expertName, "expertjob": expertJob })
                 else : 
-                 ticketAlone.update({"expertName" : "Undefined Expert Name, Ticket not Affected Yet"})
+                 ticketAlone.update({"expertname" : "Ticket not Affected Yet","username": username, "jobtitle": jobtitle,})
                 response.append(ticketAlone)
             return Response(response, status=status.HTTP_200_OK)
-            # queryset = Ticket.objects.filter(applicantId = )
         return Response({"msg": "failed"}, status=status.HTTP_400_BAD_REQUEST)
-    # tickets = Ticket.object.all()
 
 
 @api_view(['GET'])

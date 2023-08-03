@@ -37,7 +37,7 @@ class Ticket (models.Model):
         validators=[MaxValueValidator(3)],  
         help_text="Enter an integer value not exceeding 3.",
         null=False)
-    etat=models.BooleanField(default=False)
+    etat=models.CharField(max_length=20,default="waiting")
     issue = models.CharField(max_length=100, null=False)
     category = models.CharField(max_length=50, null=False)
     expertId= models.ForeignKey(Expert,on_delete=models.CASCADE, related_name='tickets', null=True, blank=True)
