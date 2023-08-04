@@ -42,3 +42,8 @@ class ApplicantSerializer(serializers.ModelSerializer):
     class Meta:
         model = Applicant
         fields = '__all__'  # or specify the fields you want to include
+
+class DeleteTicketSerializer (serializers.ModelSerializer):
+    class Meta:
+        model = Ticket
+        fields = '__all__'

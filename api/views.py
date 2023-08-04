@@ -126,6 +126,19 @@ class TicketsAPIView(APIView):
             return Response(
                 {"msg": "Unauthorised"}, status=status.HTTP_401_UNAUTHORIZED
             )
+        
+        # Start here ----------------------------------------
+    def delete (self,request,deletedTicket,format=None):
+        if IsAdmin().has_permission(request,self):
+           
+            try : 
+                ticket =Ticket.objects.get(idTicket=deletedTicket)
+                ticket.etat="archived"
+                ticket.save()
+                return Response({"msg":"succed"},status=status.HTTP_204_NO_CONTENT)
+            except: 
+                return Response({"msg" : "Err" } , status=status.HTTP_404_NOT_FOUND)
+
 
 
 @api_view(["GET"])
