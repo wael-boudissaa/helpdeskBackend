@@ -9,4 +9,6 @@ urlpatterns = [
     path("token/refresh/", TokenRefreshView.as_view(), name="token_refresh"),
     #path("token/check-refresh-token/", views.check_refresh_token, name="token_refresh"),
     path("tickets/", TicketsAPIView.as_view(), name="test"),
+    path("tickets/<str:deletedTicket>", TicketsAPIView.as_view(), name="test"),
+
 ]
