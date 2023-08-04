@@ -34,7 +34,7 @@ class TicketsAPIView(APIView):
     def get(self, request, pk=None):
         if IsApplicant().has_permission(request, self):
             user = UserSerializer(request.user).data
-            queryset = Ticket.objects.filter(applicantId=user.get("id"))
+            queryset = Ticket.objects.filter(applicantId=user.get("id")).order_by('-creationDate')
             response = []
             for ticket in queryset:
                 ticketAlone = TicketSerializer(ticket).data
@@ -53,7 +53,7 @@ class TicketsAPIView(APIView):
             return Response(response, status=status.HTTP_200_OK)
         if IsExpert().has_permission(request, self):
             user = UserSerializer(request.user).data
-            queryset = Ticket.objects.filter(expertId=user.get("id"))
+            queryset = Ticket.objects.filter(expertId=user.get("id")).order_by('-creationDate')
             response = []
             for ticket in queryset:
                 ticketAlone = TicketSerializer(ticket).data
@@ -68,7 +68,7 @@ class TicketsAPIView(APIView):
             return Response(response, status=status.HTTP_200_OK)
         if IsAdmin().has_permission(request, self):
             user = UserSerializer(request.user).data
-            queryset = Ticket.objects.all()
+            queryset = Ticket.objects.all().order_by('-creationDate')
             response = []
             for ticket in queryset:
                 ticketAlone = TicketSerializer(ticket).data
