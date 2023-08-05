@@ -126,18 +126,45 @@ class TicketsAPIView(APIView):
             return Response(
                 {"msg": "Unauthorised"}, status=status.HTTP_401_UNAUTHORIZED
             )
+    
+    
         
         # Start here ----------------------------------------
-    def delete (self,request,deletedTicket,format=None):
+    def delete (self,request,pk,format=None):
         if IsAdmin().has_permission(request,self):
            
             try : 
-                ticket =Ticket.objects.get(idTicket=deletedTicket)
+                ticket =Ticket.objects.get(idTicket=pk)
                 ticket.etat="archived"
                 ticket.save()
                 return Response({"msg":"succed"},status=status.HTTP_204_NO_CONTENT)
             except: 
                 return Response({"msg" : "Err" } , status=status.HTTP_404_NOT_FOUND)
+    def patch(self, request, pk, format=None):
+        if IsAdmin().has_permission(request, self):
+            try:
+                ticket = Ticket.objects.get(idTicket=pk)
+            except Ticket.DoesNotExist:
+                return Response({"msg": "Ticket not found"}, status=status.HTTP_404_NOT_FOUND)
+            expertUsername = request.data.get("expertId")
+            if expertUsername is None:
+                return Response({"msg": "Expert Id is required"}, status=status.HTTP_400_BAD_REQUEST)
+
+            # Update the specific field of the ticket
+            user = User.objects.get(username = expertUsername)
+            ticket.expertId = user.expert  # Replace "value" with the new value
+            ticket.save()
+            return Response({"msg": "Success"}, status=status.HTTP_200_OK)
+        elif IsExpert().has_permission(request, self):
+            try : 
+                ticket =Ticket.objects.get(idTicket=pk)
+                ticket.etat="validated"
+                ticket.save()
+                return Response({"msg":"succed"},status=status.HTTP_204_NO_CONTENT)
+            except: 
+                return Response({"msg" : "Err" } , status=status.HTTP_404_NOT_FOUND)
+        else: return Response({"msg": "Not authorised"}, status=status.HTTP_401_UNAUTHORIZED)
+        
 
 
 
