@@ -47,3 +47,27 @@ class DeleteTicketSerializer (serializers.ModelSerializer):
     class Meta:
         model = Ticket
         fields = '__all__'
+class PostMessageSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Message
+        fields = ('idTicket', 'text')
+
+class UserMessageSerializer(serializers.ModelSerializer):
+    type = serializers.SerializerMethodField()  # Define a SerializerMethodField
+
+    def get_type(self, user):
+        if hasattr(user, 'expert'):
+            return 'expert'
+        elif hasattr(user, 'applicant'):
+            return 'applicant'
+        return None  # Handle cases where neither 'expert' nor 'applicant' attribute exists
+    class Meta:
+        model = User
+        fields = ('first_name', 'last_name', 'type')
+
+
+class MessageSerializer(serializers.ModelSerializer):
+    source = UserMessageSerializer()
+    class Meta:
+        model = Message
+        fields = '__all__'

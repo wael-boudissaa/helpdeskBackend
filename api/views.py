@@ -18,18 +18,6 @@ class MyTokenObtainPairView(TokenObtainPairView):
     serializer_class = MyTokenObtainPairSerializer
 
 
-from rest_framework_simplejwt.tokens import RefreshToken
-
-
-@api_view(["POST"])
-@permission_classes([IsAuthenticated])
-def check_refresh_token(request):
-    token = RefreshToken(request.data["refresh"])
-    is_blacklisted = token.blacklisted
-
-    return Response({"blacklisted": is_blacklisted}, status=status.HTTP_200_OK)
-
-
 class TicketsAPIView(APIView):
     permission_classes = [IsAuthenticated]
 
@@ -176,7 +164,37 @@ class TicketsAPIView(APIView):
             return Response(
                 {"msg": "Not authorised"}, status=status.HTTP_401_UNAUTHORIZED
             )
+          
+class MessageAPIView(APIView):
+    permission_classes=[IsAuthenticated]
+    def post(self, resquest, idTicket=None, format=None):
+        if(IsAdmin().has_permission(resquest, self)):
+            return Response({"msg": "Not authorised"}, status=status.HTTP_401_UNAUTHORIZED)
+        serializer = PostMessageSerializer(data=resquest.data)
+        if serializer.is_valid():
+            print(serializer.validated_data.get('idTicket'))
+            try:
+                ticket = Ticket.objects.get(idTicket=serializer.validated_data.get('idTicket'))
+            except Ticket.DoesNotExist:
+                return Response({"msg": "Ticket not found"}, status=status.HTTP_404_NOT_FOUND)
+            try:
+                user = User.objects.get(username = resquest.user.username)
+            except User.DoesNotExist:
+                return Response({"msg": "User not found"}, status=status.HTTP_404_NOT_FOUND)
+            Message.objects.create(
+                idTicket=ticket,
+                text=serializer.data.get("text"),
+                source=user
+            )
+            return Response({"msg": "message well saved"}, status=status.HTTP_201_CREATED)
+        return Response({"msg": "Unvalid data"}, status=status.HTTP_400_BAD_REQUEST)
 
+    def get(self, request, idTicket=None, format=None):
+        if idTicket is not None :
+            queryset = Message.objects.filter(idTicket=idTicket).order_by('creationDate')
+            return Response(MessageSerializer(queryset, many=True).data, status=status.HTTP_200_OK)
+        else :
+            return Response({"msg": "Ticket Id is required"}, status=status.HTTP_400_BAD_REQUEST)
 
 class ProfileApiView(APIView):
     permission_classes = [IsAuthenticated]
@@ -258,7 +276,6 @@ class ProfileApiView(APIView):
             return Response(
                 {"err": "Unauthorized"}, status=status.HTTP_401_UNAUTHORIZED
         )
-
 
 @api_view(["GET"])
 def get_routes(request):
