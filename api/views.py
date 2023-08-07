@@ -1,4 +1,6 @@
 from django.shortcuts import render
+from passlib.hash import pbkdf2_sha256
+
 from rest_framework.response import Response
 from rest_framework.decorators import api_view, permission_classes
 from .serializers import *
@@ -34,7 +36,9 @@ class TicketsAPIView(APIView):
     def get(self, request, pk=None):
         if IsApplicant().has_permission(request, self):
             user = UserSerializer(request.user).data
-            queryset = Ticket.objects.filter(applicantId=user.get("id")).order_by('-creationDate')
+            queryset = Ticket.objects.filter(applicantId=user.get("id")).order_by(
+                "-creationDate"
+            )
             response = []
             for ticket in queryset:
                 ticketAlone = TicketSerializer(ticket).data
@@ -53,7 +57,9 @@ class TicketsAPIView(APIView):
             return Response(response, status=status.HTTP_200_OK)
         if IsExpert().has_permission(request, self):
             user = UserSerializer(request.user).data
-            queryset = Ticket.objects.filter(expertId=user.get("id")).order_by('-creationDate')
+            queryset = Ticket.objects.filter(expertId=user.get("id")).order_by(
+                "-creationDate"
+            )
             response = []
             for ticket in queryset:
                 ticketAlone = TicketSerializer(ticket).data
@@ -68,7 +74,7 @@ class TicketsAPIView(APIView):
             return Response(response, status=status.HTTP_200_OK)
         if IsAdmin().has_permission(request, self):
             user = UserSerializer(request.user).data
-            queryset = Ticket.objects.all().order_by('-creationDate')
+            queryset = Ticket.objects.all().order_by("-creationDate")
             response = []
             for ticket in queryset:
                 ticketAlone = TicketSerializer(ticket).data
@@ -126,46 +132,132 @@ class TicketsAPIView(APIView):
             return Response(
                 {"msg": "Unauthorised"}, status=status.HTTP_401_UNAUTHORIZED
             )
-    
-    
-        
+
         # Start here ----------------------------------------
-    def delete (self,request,pk,format=None):
-        if IsAdmin().has_permission(request,self):
-           
-            try : 
-                ticket =Ticket.objects.get(idTicket=pk)
-                ticket.etat="archived"
+
+    def delete(self, request, pk, format=None):
+        if IsAdmin().has_permission(request, self):
+            try:
+                ticket = Ticket.objects.get(idTicket=pk)
+                ticket.etat = "archived"
                 ticket.save()
-                return Response({"msg":"succed"},status=status.HTTP_204_NO_CONTENT)
-            except: 
-                return Response({"msg" : "Err" } , status=status.HTTP_404_NOT_FOUND)
+                return Response({"msg": "succed"}, status=status.HTTP_204_NO_CONTENT)
+            except:
+                return Response({"msg": "Err"}, status=status.HTTP_404_NOT_FOUND)
+
     def patch(self, request, pk, format=None):
         if IsAdmin().has_permission(request, self):
             try:
                 ticket = Ticket.objects.get(idTicket=pk)
             except Ticket.DoesNotExist:
-                return Response({"msg": "Ticket not found"}, status=status.HTTP_404_NOT_FOUND)
+                return Response(
+                    {"msg": "Ticket not found"}, status=status.HTTP_404_NOT_FOUND
+                )
             expertUsername = request.data.get("expertId")
             if expertUsername is None:
-                return Response({"msg": "Expert Id is required"}, status=status.HTTP_400_BAD_REQUEST)
+                return Response(
+                    {"msg": "Expert Id is required"}, status=status.HTTP_400_BAD_REQUEST
+                )
 
             # Update the specific field of the ticket
-            user = User.objects.get(username = expertUsername)
+            user = User.objects.get(username=expertUsername)
             ticket.expertId = user.expert  # Replace "value" with the new value
             ticket.save()
             return Response({"msg": "Success"}, status=status.HTTP_200_OK)
         elif IsExpert().has_permission(request, self):
-            try : 
-                ticket =Ticket.objects.get(idTicket=pk)
-                ticket.etat="validated"
+            try:
+                ticket = Ticket.objects.get(idTicket=pk)
+                ticket.etat = "validated"
                 ticket.save()
-                return Response({"msg":"succed"},status=status.HTTP_204_NO_CONTENT)
-            except: 
-                return Response({"msg" : "Err" } , status=status.HTTP_404_NOT_FOUND)
-        else: return Response({"msg": "Not authorised"}, status=status.HTTP_401_UNAUTHORIZED)
-        
+                return Response({"msg": "succed"}, status=status.HTTP_204_NO_CONTENT)
+            except:
+                return Response({"msg": "Err"}, status=status.HTTP_404_NOT_FOUND)
+        else:
+            return Response(
+                {"msg": "Not authorised"}, status=status.HTTP_401_UNAUTHORIZED
+            )
 
+
+class ProfileApiView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request, pk=None):
+        if IsAdmin().has_permission(request, self):
+            user_id = request.user.id
+            users = User.objects.all().order_by("-date_joined")
+            user_type = ""
+            Job = ""
+            userList = []
+            for user in users:
+                dataUser = UserSerializer(user).data
+                userid = dataUser["id"]
+                experts = Expert.objects.filter(user_id=userid)
+                applicants = Applicant.objects.filter(user_id=userid)
+                if len(experts) > 0:
+                    Job = ExpertSerializer(experts[0]).data.get("domaine_expertise")
+                    user_type = "expert"
+                    dataUser.update({"type": user_type, "job": Job})
+
+                elif len(applicants) > 0:
+                    Job = ApplicantSerializer(applicants[0]).data.get("job_title")
+                    user_type = "applicant"
+                    dataUser.update({"type": user_type, "job": Job})
+                else:
+                    dataUser.update({"type": "", "job": ""})
+                userList.append(dataUser)
+        else:
+            Response({"msg : Unauthorized"}, status=status.HTTP_401_UNAUTHORIZED)
+
+        return Response(userList, status=status.HTTP_202_ACCEPTED)
+
+    def post(self, request, pk=None):
+        if IsAdmin().has_permission(request, self):
+            username = request.data.get("username")
+            first_name = request.data.get("first_name")
+            second_name = request.data.get("second_name")
+            job = request.data.get("job")
+            user_type = request.data.get("type")
+            email = request.data.get("email")
+            password = request.data.get("password")
+            # hashed_password = pbkdf2_sha256.using(
+            #     rounds=600000, salt="5pBl2k****************"
+            # ).hash(password)
+      
+            user_defaults = {
+                "first_name": first_name,
+                "last_name": second_name,
+                "email": email,
+            }
+            existing_user, created = User.objects.get_or_create(
+                username=username, defaults=user_defaults
+            )
+
+            if created:
+                existing_user.set_password(password)
+                existing_user.save()
+                if user_type == "expert":
+                    expert = Expert.objects.create(
+                        user=existing_user, domaine_expertise=job
+                    )
+                elif user_type == "applicant":
+                    applicant = Applicant.objects.create(
+                        user=existing_user, job_title=job
+                    )
+                else:
+                    return Response(
+                        {"err": "Unauthorized"}, status=status.HTTP_401_UNAUTHORIZED
+                    )
+
+                return Response({"msg": "success"}, status=status.HTTP_200_OK)
+            else:
+                return Response(
+                    {"err": "Username already exists"},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+        else:
+            return Response(
+                {"err": "Unauthorized"}, status=status.HTTP_401_UNAUTHORIZED
+        )
 
 
 @api_view(["GET"])
