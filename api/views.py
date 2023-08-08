@@ -314,7 +314,7 @@ class ExpertsAPIView(APIView):
                 else : 
                     pass 
         else:
-            Response({"msg : Unauthorized"}, status=status.HTTP_401_UNAUTHORIZED)
+            return Response({"msg : Unauthorized"}, status=status.HTTP_401_UNAUTHORIZED)
         return Response(userList, status=status.HTTP_202_ACCEPTED)     
 @api_view(["GET"])
 def get_routes(request):
