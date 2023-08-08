@@ -1,6 +1,5 @@
 from django.shortcuts import render
 
-
 from rest_framework.response import Response
 from rest_framework.decorators import api_view, permission_classes
 from .serializers import *
@@ -104,13 +103,13 @@ class TicketsAPIView(APIView):
             serializer = PostTicketSerializer(data=request.data)
             if serializer.is_valid():
                 users = User.objects.filter(username=request.user.username)
-                Ticket.objects.create(
-                    priority=serializer.data.get("priority"),
-                    issue=serializer.data.get("issue"),
-                    category=serializer.data.get("category"),
-                    applicantId=users[0].applicant,
-                )
-                return Response({"msg": "success"}, status=status.HTTP_200_OK)
+                createdTicket = Ticket.objects.create(
+                                    priority=serializer.data.get("priority"),
+                                    issue=serializer.data.get("issue"),
+                                    category=serializer.data.get("category"),
+                                    applicantId=users[0].applicant,
+                                )
+                return Response({"idTicket": createdTicket.idTicket}, status=status.HTTP_200_OK)
             else:
                 return Response(
                     {"msg": "A required field missing"},
@@ -132,6 +131,7 @@ class TicketsAPIView(APIView):
                 return Response({"msg": "succed"}, status=status.HTTP_204_NO_CONTENT)
             except:
                 return Response({"msg": "Err"}, status=status.HTTP_404_NOT_FOUND)
+        else: return Response({"msg": "unauthorised"}, status=status.HTTP_401_UNAUTHORIZED)
 
     def patch(self, request, pk, format=None):
         if IsAdmin().has_permission(request, self):
