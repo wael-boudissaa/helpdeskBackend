@@ -11,5 +11,6 @@ urlpatterns = [
     path("tickets/<str:pk>", TicketsAPIView.as_view(), name="ticket"),
     path("messages/", MessageAPIView.as_view(), name="messages"),
     path("messages/<str:idTicket>", MessageAPIView.as_view(), name="ticket_messages"),
-    path("profiles/",ProfileApiView.as_view(),name="profile" )
+    path("profiles/",ProfileApiView.as_view(),name="profile" ),
+    path("experts/",ExpertsAPIView.as_view(), name="expert")
 ]
