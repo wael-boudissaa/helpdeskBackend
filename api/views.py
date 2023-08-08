@@ -1,5 +1,4 @@
 from django.shortcuts import render
-from passlib.hash import pbkdf2_sha256
 
 from rest_framework.response import Response
 from rest_framework.decorators import api_view, permission_classes
@@ -104,13 +103,13 @@ class TicketsAPIView(APIView):
             serializer = PostTicketSerializer(data=request.data)
             if serializer.is_valid():
                 users = User.objects.filter(username=request.user.username)
-                Ticket.objects.create(
-                    priority=serializer.data.get("priority"),
-                    issue=serializer.data.get("issue"),
-                    category=serializer.data.get("category"),
-                    applicantId=users[0].applicant,
-                )
-                return Response({"msg": "success"}, status=status.HTTP_200_OK)
+                createdTicket = Ticket.objects.create(
+                                    priority=serializer.data.get("priority"),
+                                    issue=serializer.data.get("issue"),
+                                    category=serializer.data.get("category"),
+                                    applicantId=users[0].applicant,
+                                )
+                return Response({"idTicket": createdTicket.idTicket}, status=status.HTTP_200_OK)
             else:
                 return Response(
                     {"msg": "A required field missing"},
@@ -132,6 +131,7 @@ class TicketsAPIView(APIView):
                 return Response({"msg": "succed"}, status=status.HTTP_204_NO_CONTENT)
             except:
                 return Response({"msg": "Err"}, status=status.HTTP_404_NOT_FOUND)
+        else: return Response({"msg": "unauthorised"}, status=status.HTTP_401_UNAUTHORIZED)
 
     def patch(self, request, pk, format=None):
         if IsAdmin().has_permission(request, self):
@@ -164,37 +164,54 @@ class TicketsAPIView(APIView):
             return Response(
                 {"msg": "Not authorised"}, status=status.HTTP_401_UNAUTHORIZED
             )
-          
+
+
 class MessageAPIView(APIView):
-    permission_classes=[IsAuthenticated]
+    permission_classes = [IsAuthenticated]
+
     def post(self, resquest, idTicket=None, format=None):
-        if(IsAdmin().has_permission(resquest, self)):
-            return Response({"msg": "Not authorised"}, status=status.HTTP_401_UNAUTHORIZED)
+        if IsAdmin().has_permission(resquest, self):
+            return Response(
+                {"msg": "Not authorised"}, status=status.HTTP_401_UNAUTHORIZED
+            )
         serializer = PostMessageSerializer(data=resquest.data)
         if serializer.is_valid():
-            print(serializer.validated_data.get('idTicket'))
+            print(serializer.validated_data.get("idTicket"))
             try:
-                ticket = Ticket.objects.get(idTicket=serializer.validated_data.get('idTicket'))
+                ticket = Ticket.objects.get(
+                    idTicket=serializer.validated_data.get("idTicket")
+                )
             except Ticket.DoesNotExist:
-                return Response({"msg": "Ticket not found"}, status=status.HTTP_404_NOT_FOUND)
+                return Response(
+                    {"msg": "Ticket not found"}, status=status.HTTP_404_NOT_FOUND
+                )
             try:
-                user = User.objects.get(username = resquest.user.username)
+                user = User.objects.get(username=resquest.user.username)
             except User.DoesNotExist:
-                return Response({"msg": "User not found"}, status=status.HTTP_404_NOT_FOUND)
+                return Response(
+                    {"msg": "User not found"}, status=status.HTTP_404_NOT_FOUND
+                )
             Message.objects.create(
-                idTicket=ticket,
-                text=serializer.data.get("text"),
-                source=user
+                idTicket=ticket, text=serializer.data.get("text"), source=user
             )
-            return Response({"msg": "message well saved"}, status=status.HTTP_201_CREATED)
+            return Response(
+                {"msg": "message well saved"}, status=status.HTTP_201_CREATED
+            )
         return Response({"msg": "Unvalid data"}, status=status.HTTP_400_BAD_REQUEST)
 
     def get(self, request, idTicket=None, format=None):
-        if idTicket is not None :
-            queryset = Message.objects.filter(idTicket=idTicket).order_by('creationDate')
-            return Response(MessageSerializer(queryset, many=True).data, status=status.HTTP_200_OK)
-        else :
-            return Response({"msg": "Ticket Id is required"}, status=status.HTTP_400_BAD_REQUEST)
+        if idTicket is not None:
+            queryset = Message.objects.filter(idTicket=idTicket).order_by(
+                "creationDate"
+            )
+            return Response(
+                MessageSerializer(queryset, many=True).data, status=status.HTTP_200_OK
+            )
+        else:
+            return Response(
+                {"msg": "Ticket Id is required"}, status=status.HTTP_400_BAD_REQUEST
+            )
+
 
 class ProfileApiView(APIView):
     permission_classes = [IsAuthenticated]
@@ -240,7 +257,7 @@ class ProfileApiView(APIView):
             # hashed_password = pbkdf2_sha256.using(
             #     rounds=600000, salt="5pBl2k****************"
             # ).hash(password)
-      
+
             user_defaults = {
                 "first_name": first_name,
                 "last_name": second_name,
@@ -275,7 +292,8 @@ class ProfileApiView(APIView):
         else:
             return Response(
                 {"err": "Unauthorized"}, status=status.HTTP_401_UNAUTHORIZED
-        )
+            )
+
 
 @api_view(["GET"])
 def get_routes(request):
