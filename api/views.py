@@ -295,6 +295,27 @@ class ProfileApiView(APIView):
             )
 
 
+class ExpertsAPIView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request, pk=None):
+        if IsAdmin().has_permission(request, self):
+            users = User.objects.all().order_by("-date_joined")
+            domaine_expertise = ""
+            userList = []
+            for user in users:
+                dataUser = UserSerializer(user).data
+                userid = dataUser["id"]
+                experts = Expert.objects.filter(user_id=userid)
+                if len(experts) > 0:
+                    domaine_expertise = ExpertSerializer(experts[0]).data.get("domaine_expertise")
+                    dataUser.update({"domaine_expertise": domaine_expertise})
+                    userList.append(dataUser)
+                else : 
+                    pass 
+        else:
+            Response({"msg : Unauthorized"}, status=status.HTTP_401_UNAUTHORIZED)
+        return Response(userList, status=status.HTTP_202_ACCEPTED)     
 @api_view(["GET"])
 def get_routes(request):
     """returns a view containing all the possible routes"""
