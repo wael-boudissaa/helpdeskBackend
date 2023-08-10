@@ -117,7 +117,7 @@ class TicketsAPIView(APIView):
                 )
         else:
             return Response(
-                {"msg": "Unauthorised"}, status=status.HTTP_401_UNAUTHORIZED
+                {"msg": "Unauthorised"}, status=status.HTTP_403_FORBIDDEN
             )
 
         # Start here ----------------------------------------
@@ -131,7 +131,7 @@ class TicketsAPIView(APIView):
                 return Response({"msg": "succed"}, status=status.HTTP_204_NO_CONTENT)
             except:
                 return Response({"msg": "Err"}, status=status.HTTP_404_NOT_FOUND)
-        else: return Response({"msg": "unauthorised"}, status=status.HTTP_401_UNAUTHORIZED)
+        else: return Response({"msg": "unauthorised"}, status=status.HTTP_403_FORBIDDEN)
 
     def patch(self, request, pk, format=None):
         if IsAdmin().has_permission(request, self):
@@ -162,7 +162,7 @@ class TicketsAPIView(APIView):
                 return Response({"msg": "Err"}, status=status.HTTP_404_NOT_FOUND)
         else:
             return Response(
-                {"msg": "Not authorised"}, status=status.HTTP_401_UNAUTHORIZED
+                {"msg": "Not authorised"}, status=status.HTTP_403_FORBIDDEN
             )
 
 
@@ -172,7 +172,7 @@ class MessageAPIView(APIView):
     def post(self, resquest, idTicket=None, format=None):
         if IsAdmin().has_permission(resquest, self):
             return Response(
-                {"msg": "Not authorised"}, status=status.HTTP_401_UNAUTHORIZED
+                {"msg": "Not authorised"}, status=status.HTTP_403_FORBIDDEN
             )
         serializer = PostMessageSerializer(data=resquest.data)
         if serializer.is_valid():
@@ -241,7 +241,7 @@ class ProfileApiView(APIView):
                     dataUser.update({"type": "", "job": ""})
                 userList.append(dataUser)
         else:
-            Response({"msg : Unauthorized"}, status=status.HTTP_401_UNAUTHORIZED)
+            Response({"msg : Unauthorized"}, status=status.HTTP_403_FORBIDDEN)
 
         return Response(userList, status=status.HTTP_202_ACCEPTED)
 
@@ -280,18 +280,18 @@ class ProfileApiView(APIView):
                     )
                 else:
                     return Response(
-                        {"err": "Unauthorized"}, status=status.HTTP_401_UNAUTHORIZED
+                        {"err": "Unauthorized"}, status=status.HTTP_403_FORBIDDEN
                     )
 
                 return Response({"msg": "success"}, status=status.HTTP_200_OK)
             else:
                 return Response(
                     {"err": "Username already exists"},
-                    status=status.HTTP_400_BAD_REQUEST,
+                    status=status.HTTP_406_NOT_ACCEPTABLE,
                 )
         else:
             return Response(
-                {"err": "Unauthorized"}, status=status.HTTP_401_UNAUTHORIZED
+                {"err": "Unauthorized"}, status=status.HTTP_403_FORBIDDEN
             )
 
 
@@ -314,7 +314,7 @@ class ExpertsAPIView(APIView):
                 else : 
                     pass 
         else:
-            return Response({"msg : Unauthorized"}, status=status.HTTP_401_UNAUTHORIZED)
+            return Response({"msg : Unauthorized"}, status=status.HTTP_403_FORBIDDEN)
         return Response(userList, status=status.HTTP_202_ACCEPTED)     
 @api_view(["GET"])
 def get_routes(request):
