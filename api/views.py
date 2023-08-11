@@ -40,6 +40,9 @@ class TicketsAPIView(APIView):
 
                 else:
                     ticketAlone.update({"username": "Ticket not Affected Yet"})
+                notifications = Notification.objects.filter(idTicket=ticketAlone.get("idTicket"), reason="expert to applicant")
+                if (len(notifications)>0): ticketAlone.update({"newMessage": True})
+                else: ticketAlone.update({"newMessage": False})
                 response.append(ticketAlone)
             return Response(response, status=status.HTTP_200_OK)
         if IsExpert().has_permission(request, self):
@@ -57,6 +60,9 @@ class TicketsAPIView(APIView):
                 username = UserSerializer(users[0]).data.get("username")
                 jobtitle = ApplicantSerializer(applicants[0]).data.get("job_title")
                 ticketAlone.update({"username": username, "jobtitle": jobtitle})
+                notifications = Notification.objects.filter(idTicket=ticketAlone.get("idTicket"),reason="applicant to expert")
+                if (len(notifications)>0): ticketAlone.update({"newMessage": True})
+                else: ticketAlone.update({"newMessage": False})
                 response.append(ticketAlone)
             return Response(response, status=status.HTTP_200_OK)
         if IsAdmin().has_permission(request, self):
@@ -109,6 +115,11 @@ class TicketsAPIView(APIView):
                                     category=serializer.data.get("category"),
                                     applicantId=users[0].applicant,
                                 )
+                Notification.objects.create(
+                         idTicket =  createdTicket,
+                         reason = "ticket added"
+
+                )
                 return Response({"idTicket": createdTicket.idTicket}, status=status.HTTP_200_OK)
             else:
                 return Response(
@@ -176,7 +187,6 @@ class MessageAPIView(APIView):
             )
         serializer = PostMessageSerializer(data=resquest.data)
         if serializer.is_valid():
-            print(serializer.validated_data.get("idTicket"))
             try:
                 ticket = Ticket.objects.get(
                     idTicket=serializer.validated_data.get("idTicket")
@@ -194,6 +204,17 @@ class MessageAPIView(APIView):
             Message.objects.create(
                 idTicket=ticket, text=serializer.data.get("text"), source=user
             )
+            
+            if (hasattr(resquest.user, "applicant")):
+                Notification.objects.create(
+                    idTicket = serializer.validated_data.get("idTicket"),
+                    reason = "applicant to expert"
+                ) 
+            else:
+                Notification.objects.create(
+                    idTicket = serializer.validated_data.get("idTicket"),
+                    reason = "expert to applicant"
+                )
             return Response(
                 {"msg": "message well saved"}, status=status.HTTP_201_CREATED
             )
@@ -294,6 +315,28 @@ class ProfileApiView(APIView):
                 {"err": "Unauthorized"}, status=status.HTTP_403_FORBIDDEN
             )
 
+
+class NotificationAPIView(APIView):
+    permission_classes = [IsAuthenticated]
+    def delete(self, request, idTicket=None):
+        if IsAdmin().has_permission(request, self):
+         return Response({"msg": "unauthorised"}, status=status.HTTP_403_FORBIDDEN)
+        elif (IsExpert().has_permission(request,self)) : 
+            try:
+                notifications = Notification.objects.filter(idTicket=idTicket,reason="applicant to expert")
+                for notification in notifications : 
+                    notification.delete()
+                return Response({"msg": "succed"}, status=status.HTTP_200_OK)
+            except:
+                return Response({"msg": "Err"}, status=status.HTTP_404_NOT_FOUND)
+        else: 
+            try:
+                notifications = Notification.objects.filter(idTicket=idTicket,reason="expert to applicant")
+                for notification in notifications : 
+                    notification.delete()
+                return Response({"msg": "succed"}, status=status.HTTP_200_OK)
+            except:
+                return Response({"msg": "Err"}, status=status.HTTP_404_NOT_FOUND)
 
 class ExpertsAPIView(APIView):
     permission_classes = [IsAuthenticated]

@@ -4,12 +4,30 @@ import random
 import string
 from django.core.validators import MaxValueValidator
 
-def generate_unique_code():
+def generate_unique_ticket_code():
     length = 10
 
     while True:
         code = ''.join(random.choices(string.ascii_uppercase, k=length))
         if Ticket.objects.filter(idTicket=code).count() == 0:
+            break
+
+    return code
+def generate_unique_message_code():
+    length = 10
+
+    while True:
+        code = ''.join(random.choices(string.ascii_uppercase, k=length))
+        if Message.objects.filter(idTicket=code).count() == 0:
+            break
+
+    return code
+def generate_unique_notification_code():
+    length = 10
+
+    while True:
+        code = ''.join(random.choices(string.ascii_uppercase, k=length))
+        if Notification.objects.filter(idTicket=code).count() == 0:
             break
 
     return code
@@ -32,7 +50,7 @@ class Expert (models.Model):
         return self.user.username 
     
 class Ticket (models.Model):
-    idTicket = models.CharField(max_length=15, primary_key=True, default=generate_unique_code)
+    idTicket = models.CharField(max_length=15, primary_key=True, default=generate_unique_ticket_code)
     priority = models.IntegerField(
         validators=[MaxValueValidator(3)],  
         help_text="Enter an integer value not exceeding 3.",
@@ -47,7 +65,7 @@ class Ticket (models.Model):
         return self.idTicket
     
 class Message (models.Model): 
-    idMessage = models.CharField(max_length=15,primary_key=True, default=generate_unique_code)
+    idMessage = models.CharField(max_length=15,primary_key=True, default=generate_unique_message_code)
     idTicket = models.ForeignKey(Ticket, on_delete=models.CASCADE, related_name='messages')
     source = models.ForeignKey(User, on_delete=models.CASCADE, related_name='messages')
     text =models.CharField(max_length=800, null=False)
@@ -55,4 +73,10 @@ class Message (models.Model):
     def __str__ (self):
         return self.idMessage 
 
+class Notification(models.Model): 
+    idNotification = models.CharField(max_length=15,primary_key=True, default=generate_unique_notification_code)
+    idTicket = models.ForeignKey(Ticket, on_delete=models.CASCADE, related_name='notifications')
+    reason = models.CharField(max_length=20,null=False)
+    def __str__ (self):
+        return self.idNotification
 

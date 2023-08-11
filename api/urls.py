@@ -12,5 +12,6 @@ urlpatterns = [
     path("messages/", MessageAPIView.as_view(), name="messages"),
     path("messages/<str:idTicket>", MessageAPIView.as_view(), name="ticket_messages"),
     path("profiles/",ProfileApiView.as_view(),name="profile" ),
-    path("experts/",ExpertsAPIView.as_view(), name="expert")
+    path("experts/",ExpertsAPIView.as_view(), name="expert"),
+    path("notifications/<str:idTicket>",NotificationAPIView.as_view(), name="delete_notifications")
 ]
